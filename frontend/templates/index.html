@@ -186,23 +186,25 @@
                                     const data = dataset.data[index];
                                     const percentage = ((data / total) * 100).toFixed(1) + '%';
                                     
-                                    // Get the center point and angle of the segment
-                                    const model = element;
-                                    const angle = Math.PI / 2 - (element.startAngle + (element.endAngle - element.startAngle) / 2);
-                                    const radius = (model.innerRadius + (model.outerRadius - model.innerRadius) / 2);
+                                    // Получаем угол середины сегмента
+                                    const angle = element.startAngle + (element.endAngle - element.startAngle) / 2;
                                     
-                                    const x = centerX + radius * Math.cos(angle);
-                                    const y = centerY - radius * Math.sin(angle);
+                                    // Радиус для текста (немного меньше чем радиус сегмента)
+                                    const radius = element.outerRadius * 0.6;
                                     
-                                    // Draw the text
-                                    ctx.font = '14px Arial';
+                                    // Вычисляем позицию текста
+                                    const x = centerX + Math.cos(angle) * radius;
+                                    const y = centerY + Math.sin(angle) * radius;
+                                    
+                                    // Настройки текста
+                                    ctx.font = 'bold 14px Arial';
                                     ctx.fillStyle = 'white';
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle';
                                     
-                                    // Add stroke to make text more readable
-                                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-                                    ctx.lineWidth = 3;
+                                    // Добавляем обводку для лучшей читаемости
+                                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+                                    ctx.lineWidth = 4;
                                     ctx.strokeText(percentage, x, y);
                                     ctx.fillText(percentage, x, y);
                                 });
