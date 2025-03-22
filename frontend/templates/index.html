@@ -1,23 +1,103 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статистика отзывов S7</title>
+    <title>S7 AI Wings - Анализ отзывов</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 800px;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
-    <h1>Статистика отзывов S7</h1>
-    <div>
-        <h2>Распределение отзывов по категориям</h2>
-        {{ bar_chart|safe }}
+    <div class="chart-container">
+        <canvas id="barChart"></canvas>
     </div>
-    <div>
-        <h2>Распределение отзывов по категориям</h2>
-        {{ pie_chart|safe }}
+    <div class="chart-container">
+        <canvas id="pieChart"></canvas>
     </div>
-    <div>
-        <h2>Heatmap отзывов по категориям</h2>
-        {{ heatmap_chart|safe }}
+    <div class="chart-container">
+        <canvas id="heatmapChart"></canvas>
     </div>
+
+    <script>
+        fetch('/api/data')
+            .then(response => response.json())
+            .then(data => {
+                const categories = Object.keys(data.categories);
+                const counts = Object.values(data.categories);
+
+                // Bar Chart
+                new Chart(document.getElementById('barChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            label: 'Количество отзывов',
+                            data: counts,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                        }]
+                    }
+                });
+
+                // Pie Chart
+                new Chart(document.getElementById('pieChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.5)',
+                                'rgba(54, 162, 235, 0.5)',
+                                'rgba(255, 206, 86, 0.5)',
+                                'rgba(75, 192, 192, 0.5)'
+                            ]
+                        }]
+                    }
+                });
+
+                // Heatmap
+                const heatmapData = data.heatmap;
+                const heatmapLabels = [...new Set(heatmapData.map(d => d.category))];
+                const metrics = ['positive', 'neutral', 'negative'];
+                
+                const heatmapValues = heatmapLabels.map(category => {
+                    const row = heatmapData.find(d => d.category === category);
+                    return metrics.map(metric => row[metric]);
+                });
+
+                new Chart(document.getElementById('heatmapChart'), {
+                    type: 'matrix',
+                    data: {
+                        datasets: [{
+                            label: 'Тепловая карта',
+                            data: heatmapValues.flat().map((value, i) => ({
+                                x: i % metrics.length,
+                                y: Math.floor(i / metrics.length),
+                                v: value
+                            })),
+                            width: ({ chart }) => (chart.chartArea || {}).width / metrics.length - 1,
+                            height: ({ chart }) => (chart.chartArea || {}).height / heatmapLabels.length - 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'category',
+                                labels: metrics,
+                                offset: true
+                            },
+                            y: {
+                                type: 'category',
+                                labels: heatmapLabels,
+                                offset: true
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
 </body>
 </html>
