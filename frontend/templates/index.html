@@ -32,6 +32,41 @@
     </div>
 
     <script>
+        // Функция для генерации цветов
+        function generateColors(count) {
+            const baseColors = [
+                'rgb(255, 99, 132)',   // красный
+                'rgb(54, 162, 235)',   // синий
+                'rgb(255, 206, 86)',   // желтый
+                'rgb(75, 192, 192)',   // бирюзовый
+                'rgb(153, 102, 255)',  // фиолетовый
+                'rgb(255, 159, 64)',   // оранжевый
+                'rgb(0, 204, 102)',    // зеленый
+                'rgb(255, 102, 255)',  // розовый
+                'rgb(102, 255, 255)',  // голубой
+                'rgb(255, 204, 0)',    // золотой
+                'rgb(204, 0, 204)',    // пурпурный
+                'rgb(0, 153, 153)',    // морской волны
+                'rgb(204, 102, 0)',    // коричневый
+                'rgb(102, 0, 204)',    // индиго
+                'rgb(204, 204, 0)'     // оливковый
+            ];
+
+            // Если категорий больше, чем базовых цветов, генерируем дополнительные
+            if (count <= baseColors.length) {
+                return baseColors.slice(0, count);
+            }
+
+            const colors = [...baseColors];
+            for (let i = baseColors.length; i < count; i++) {
+                const r = Math.floor(Math.random() * 255);
+                const g = Math.floor(Math.random() * 255);
+                const b = Math.floor(Math.random() * 255);
+                colors.push(`rgb(${r}, ${g}, ${b})`);
+            }
+            return colors;
+        }
+
         fetch('/api/data')
             .then(response => response.json())
             .then(data => {
@@ -50,6 +85,8 @@
                     return;
                 }
 
+                const colors = generateColors(categories.length);
+
                 // Bar Chart
                 new Chart(document.getElementById('barChart'), {
                     type: 'bar',
@@ -58,7 +95,7 @@
                         datasets: [{
                             label: 'Количество отзывов',
                             data: counts,
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                            backgroundColor: colors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.5)'))
                         }]
                     },
                     options: {
@@ -78,23 +115,26 @@
                         labels: categories,
                         datasets: [{
                             data: counts,
-                            backgroundColor: [
-                                'rgba(255, 99, 132, 0.5)',
-                                'rgba(54, 162, 235, 0.5)',
-                                'rgba(255, 206, 86, 0.5)',
-                                'rgba(75, 192, 192, 0.5)'
-                            ]
+                            backgroundColor: colors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.5)'))
                         }]
                     },
                     options: {
-                        responsive: true
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 15
+                                }
+                            }
+                        }
                     }
                 });
 
                 if (data.heatmap && data.heatmap.length > 0) {
-                    // Stacked Bar Chart instead of Heatmap
+                    // Stacked Bar Chart
                     const heatmapData = data.heatmap;
-                    const categories = [...new Set(heatmapData.map(d => d.category))];
+                    const categories = heatmapData.map(d => d.category);
                     
                     new Chart(document.getElementById('stackedBarChart'), {
                         type: 'bar',
@@ -103,17 +143,17 @@
                             datasets: [
                                 {
                                     label: 'Положительные',
-                                    data: categories.map(category => heatmapData.find(d => d.category === category).positive),
+                                    data: heatmapData.map(d => d.positive),
                                     backgroundColor: 'rgba(75, 192, 192, 0.5)'
                                 },
                                 {
                                     label: 'Нейтральные',
-                                    data: categories.map(category => heatmapData.find(d => d.category === category).neutral),
+                                    data: heatmapData.map(d => d.neutral),
                                     backgroundColor: 'rgba(255, 206, 86, 0.5)'
                                 },
                                 {
                                     label: 'Отрицательные',
-                                    data: categories.map(category => heatmapData.find(d => d.category === category).negative),
+                                    data: heatmapData.map(d => d.negative),
                                     backgroundColor: 'rgba(255, 99, 132, 0.5)'
                                 }
                             ]
@@ -126,7 +166,13 @@
                                 },
                                 y: {
                                     stacked: true,
-                                    beginAtZero: true
+                                    beginAtZero: true,
+                                    max: 1,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return (value * 100) + '%';
+                                        }
+                                    }
                                 }
                             }
                         }
