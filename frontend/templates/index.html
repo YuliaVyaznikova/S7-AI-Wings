@@ -4,21 +4,33 @@
     <title>S7 AI Wings - Анализ отзывов</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --s7-green: #94c948;
+            --s7-dark-green: #6b9331;
+            --s7-light-green: #c5e698;
+            --s7-gray: #58595b;
+            --s7-light-gray: #f2f2f2;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
+            background-color: var(--s7-light-gray);
         }
+        
         .main-title {
             text-align: center;
-            color: #333;
+            color: var(--s7-gray);
             font-size: 32px;
             margin-bottom: 40px;
             padding: 20px;
-            background: linear-gradient(to right, #e0e0e0, #ffffff, #e0e0e0);
+            background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--s7-green);
         }
+        
         .chart-container {
             width: 800px;
             margin: 20px auto;
@@ -27,15 +39,21 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--s7-green);
         }
+        
         .chart-container h2 {
-            color: #444;
+            color: var(--s7-gray);
             margin-bottom: 20px;
         }
+        
         .error-message {
-            color: red;
+            color: #d32f2f;
             padding: 20px;
             text-align: center;
+            background: white;
+            border-radius: 8px;
+            border-left: 5px solid #d32f2f;
         }
     </style>
 </head>
@@ -59,21 +77,21 @@
         // Функция для генерации цветов
         function generateColors(count) {
             const baseColors = [
-                'rgb(255, 51, 51)',    // яркий красный
-                'rgb(0, 128, 255)',    // яркий синий
-                'rgb(255, 187, 0)',    // яркий желтый
-                'rgb(0, 204, 102)',    // яркий зеленый
-                'rgb(153, 51, 255)',   // яркий фиолетовый
-                'rgb(255, 102, 0)',    // яркий оранжевый
-                'rgb(51, 204, 204)',   // яркий бирюзовый
-                'rgb(255, 51, 153)',   // яркий розовый
-                'rgb(0, 153, 0)',      // темно-зеленый
-                'rgb(204, 153, 0)',    // темно-золотой
-                'rgb(153, 0, 153)',    // темно-пурпурный
-                'rgb(0, 102, 204)',    // темно-синий
-                'rgb(204, 51, 0)',     // темно-оранжевый
-                'rgb(102, 0, 204)',    // темно-фиолетовый
-                'rgb(153, 153, 0)'     // темно-оливковый
+                'rgb(148, 201, 72)',   // s7-green
+                'rgb(107, 147, 49)',   // s7-dark-green
+                'rgb(197, 230, 152)',  // s7-light-green
+                'rgb(88, 89, 91)',     // s7-gray
+                'rgb(242, 242, 242)',  // s7-light-gray
+                'rgb(131, 177, 57)',   // дополнительные оттенки зеленого
+                'rgb(165, 214, 98)',
+                'rgb(120, 162, 52)',
+                'rgb(182, 222, 125)',
+                'rgb(143, 189, 69)',
+                'rgb(156, 201, 83)',
+                'rgb(168, 214, 97)',
+                'rgb(133, 176, 56)',
+                'rgb(149, 192, 74)',
+                'rgb(174, 217, 107)'
             ];
 
             if (count <= baseColors.length) {
@@ -82,9 +100,10 @@
 
             const colors = [...baseColors];
             for (let i = baseColors.length; i < count; i++) {
-                const r = Math.floor(Math.random() * 156) + 100;
-                const g = Math.floor(Math.random() * 156) + 100;
-                const b = Math.floor(Math.random() * 156) + 100;
+                // Генерируем оттенки зеленого
+                const g = Math.floor(Math.random() * 100) + 155; // 155-255
+                const r = Math.floor(g * 0.7);  // ~70% от зеленого
+                const b = Math.floor(g * 0.3);  // ~30% от зеленого
                 colors.push(`rgb(${r}, ${g}, ${b})`);
             }
             return colors;
@@ -126,7 +145,15 @@
                         responsive: true,
                         scales: {
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(148, 201, 72, 0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
                             }
                         }
                     }
@@ -148,7 +175,8 @@
                             legend: {
                                 position: 'right',
                                 labels: {
-                                    boxWidth: 15
+                                    boxWidth: 15,
+                                    color: 'rgb(88, 89, 91)'
                                 }
                             },
                             tooltip: {
@@ -158,17 +186,6 @@
                                         const percentage = ((value / total) * 100).toFixed(1);
                                         return `${context.label}: ${value} (${percentage}%)`;
                                     }
-                                }
-                            },
-                            datalabels: {
-                                formatter: (value, ctx) => {
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return percentage + '%';
-                                },
-                                color: '#fff',
-                                font: {
-                                    weight: 'bold',
-                                    size: 14
                                 }
                             }
                         }
@@ -186,23 +203,17 @@
                                     const data = dataset.data[index];
                                     const percentage = ((data / total) * 100).toFixed(1) + '%';
                                     
-                                    // Получаем угол середины сегмента
                                     const angle = element.startAngle + (element.endAngle - element.startAngle) / 2;
-                                    
-                                    // Радиус для текста (80% от радиуса сегмента)
                                     const radius = element.outerRadius * 0.8;
                                     
-                                    // Вычисляем позицию текста
                                     const x = centerX + Math.cos(angle) * radius;
                                     const y = centerY + Math.sin(angle) * radius;
                                     
-                                    // Настройки текста
-                                    ctx.font = 'bold 14px Arial';
+                                    ctx.font = 'bold 13px Arial';
                                     ctx.fillStyle = 'white';
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle';
                                     
-                                    // Добавляем обводку для лучшей читаемости
                                     ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
                                     ctx.lineWidth = 4;
                                     ctx.strokeText(percentage, x, y);
@@ -227,17 +238,17 @@
                                 {
                                     label: 'Положительные',
                                     data: heatmapData.map(d => d.positive),
-                                    backgroundColor: 'rgb(75, 192, 192)'
+                                    backgroundColor: 'rgb(148, 201, 72)'  // s7-green
                                 },
                                 {
                                     label: 'Нейтральные',
                                     data: heatmapData.map(d => d.neutral),
-                                    backgroundColor: 'rgb(255, 187, 0)'
+                                    backgroundColor: 'rgb(242, 242, 242)'  // s7-light-gray
                                 },
                                 {
                                     label: 'Отрицательные',
                                     data: heatmapData.map(d => d.negative),
-                                    backgroundColor: 'rgb(255, 51, 51)'
+                                    backgroundColor: 'rgb(88, 89, 91)'  // s7-gray
                                 }
                             ]
                         },
@@ -246,11 +257,17 @@
                             scales: {
                                 x: {
                                     stacked: true,
+                                    grid: {
+                                        display: false
+                                    }
                                 },
                                 y: {
                                     stacked: true,
                                     beginAtZero: true,
                                     max: 1,
+                                    grid: {
+                                        color: 'rgba(148, 201, 72, 0.1)'
+                                    },
                                     ticks: {
                                         callback: function(value) {
                                             return (value * 100) + '%';
@@ -259,6 +276,11 @@
                                 }
                             },
                             plugins: {
+                                legend: {
+                                    labels: {
+                                        color: 'rgb(88, 89, 91)'
+                                    }
+                                },
                                 tooltip: {
                                     callbacks: {
                                         label: function(context) {
