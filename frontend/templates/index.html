@@ -189,8 +189,8 @@
                                     // Получаем угол середины сегмента
                                     const angle = element.startAngle + (element.endAngle - element.startAngle) / 2;
                                     
-                                    // Радиус для текста (немного меньше чем радиус сегмента)
-                                    const radius = element.outerRadius * 0.6;
+                                    // Радиус для текста (80% от радиуса сегмента)
+                                    const radius = element.outerRadius * 0.8;
                                     
                                     // Вычисляем позицию текста
                                     const x = centerX + Math.cos(angle) * radius;
