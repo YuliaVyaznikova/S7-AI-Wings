@@ -77,21 +77,21 @@
         // Функция для генерации цветов
         function generateColors(count) {
             const baseColors = [
-                'rgb(148, 201, 72)',   // s7-green
-                'rgb(107, 147, 49)',   // s7-dark-green
-                'rgb(197, 230, 152)',  // s7-light-green
-                'rgb(88, 89, 91)',     // s7-gray
-                'rgb(242, 242, 242)',  // s7-light-gray
-                'rgb(131, 177, 57)',   // дополнительные оттенки зеленого
-                'rgb(165, 214, 98)',
-                'rgb(120, 162, 52)',
-                'rgb(182, 222, 125)',
-                'rgb(143, 189, 69)',
-                'rgb(156, 201, 83)',
-                'rgb(168, 214, 97)',
-                'rgb(133, 176, 56)',
-                'rgb(149, 192, 74)',
-                'rgb(174, 217, 107)'
+                'rgb(94, 201, 72)',     // зеленый
+                'rgb(54, 162, 235)',    // синий
+                'rgb(255, 159, 64)',    // оранжевый
+                'rgb(153, 102, 255)',   // фиолетовый
+                'rgb(255, 99, 132)',    // красный
+                'rgb(75, 192, 192)',    // бирюзовый
+                'rgb(255, 205, 86)',    // желтый
+                'rgb(201, 103, 207)',   // розовый
+                'rgb(129, 199, 111)',   // светло-зеленый
+                'rgb(95, 167, 219)',    // голубой
+                'rgb(238, 142, 123)',   // лососевый
+                'rgb(176, 122, 217)',   // сиреневый
+                'rgb(255, 181, 90)',    // светло-оранжевый
+                'rgb(112, 187, 187)',   // морская волна
+                'rgb(235, 177, 183)'    // пыльная роза
             ];
 
             if (count <= baseColors.length) {
@@ -100,11 +100,11 @@
 
             const colors = [...baseColors];
             for (let i = baseColors.length; i < count; i++) {
-                // Генерируем оттенки зеленого
-                const g = Math.floor(Math.random() * 100) + 155; // 155-255
-                const r = Math.floor(g * 0.7);  // ~70% от зеленого
-                const b = Math.floor(g * 0.3);  // ~30% от зеленого
-                colors.push(`rgb(${r}, ${g}, ${b})`);
+                // Генерируем случайные яркие цвета
+                const h = Math.floor(Math.random() * 360);  // Оттенок
+                const s = Math.floor(Math.random() * 20) + 60;  // Насыщенность 60-80%
+                const l = Math.floor(Math.random() * 20) + 45;  // Яркость 45-65%
+                colors.push(`hsl(${h}, ${s}%, ${l}%)`);
             }
             return colors;
         }
@@ -138,7 +138,7 @@
                         datasets: [{
                             label: 'Количество отзывов',
                             data: counts,
-                            backgroundColor: colors
+                            backgroundColor: colors.map(color => color.replace(')', ', 0.8)').replace('rgb', 'rgba'))
                         }]
                     },
                     options: {
@@ -148,11 +148,24 @@
                                 beginAtZero: true,
                                 grid: {
                                     color: 'rgba(148, 201, 72, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'rgb(88, 89, 91)'
                                 }
                             },
                             x: {
                                 grid: {
                                     display: false
+                                },
+                                ticks: {
+                                    color: 'rgb(88, 89, 91)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'rgb(88, 89, 91)'
                                 }
                             }
                         }
@@ -238,17 +251,17 @@
                                 {
                                     label: 'Положительные',
                                     data: heatmapData.map(d => d.positive),
-                                    backgroundColor: 'rgb(148, 201, 72)'  // s7-green
+                                    backgroundColor: 'rgb(94, 201, 72)'  // зеленый
                                 },
                                 {
                                     label: 'Нейтральные',
                                     data: heatmapData.map(d => d.neutral),
-                                    backgroundColor: 'rgb(242, 242, 242)'  // s7-light-gray
+                                    backgroundColor: 'rgb(255, 205, 86)'  // желтый
                                 },
                                 {
                                     label: 'Отрицательные',
                                     data: heatmapData.map(d => d.negative),
-                                    backgroundColor: 'rgb(88, 89, 91)'  // s7-gray
+                                    backgroundColor: 'rgb(255, 99, 132)'  // красный
                                 }
                             ]
                         },
@@ -259,6 +272,9 @@
                                     stacked: true,
                                     grid: {
                                         display: false
+                                    },
+                                    ticks: {
+                                        color: 'rgb(88, 89, 91)'
                                     }
                                 },
                                 y: {
@@ -271,7 +287,8 @@
                                     ticks: {
                                         callback: function(value) {
                                             return (value * 100) + '%';
-                                        }
+                                        },
+                                        color: 'rgb(88, 89, 91)'
                                     }
                                 }
                             },
