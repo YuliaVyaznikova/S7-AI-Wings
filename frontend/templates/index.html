@@ -7,26 +7,48 @@
         .chart-container {
             width: 800px;
             margin: 20px auto;
+            text-align: center;
+        }
+        .error-message {
+            color: red;
+            padding: 20px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
+    <div id="error" class="error-message" style="display: none;"></div>
     <div class="chart-container">
+        <h2>Распределение отзывов по категориям</h2>
         <canvas id="barChart"></canvas>
     </div>
     <div class="chart-container">
+        <h2>Процентное соотношение категорий</h2>
         <canvas id="pieChart"></canvas>
     </div>
     <div class="chart-container">
-        <canvas id="heatmapChart"></canvas>
+        <h2>Распределение оценок по категориям</h2>
+        <canvas id="stackedBarChart"></canvas>
     </div>
 
     <script>
         fetch('/api/data')
             .then(response => response.json())
             .then(data => {
+                if (data.error) {
+                    document.getElementById('error').textContent = 'Ошибка: ' + data.error;
+                    document.getElementById('error').style.display = 'block';
+                    return;
+                }
+
                 const categories = Object.keys(data.categories);
                 const counts = Object.values(data.categories);
+
+                if (categories.length === 0) {
+                    document.getElementById('error').textContent = 'Нет данных для отображения';
+                    document.getElementById('error').style.display = 'block';
+                    return;
+                }
 
                 // Bar Chart
                 new Chart(document.getElementById('barChart'), {
@@ -38,6 +60,14 @@
                             data: counts,
                             backgroundColor: 'rgba(54, 162, 235, 0.5)'
                         }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
                     }
                 });
 
@@ -55,48 +85,57 @@
                                 'rgba(75, 192, 192, 0.5)'
                             ]
                         }]
-                    }
-                });
-
-                // Heatmap
-                const heatmapData = data.heatmap;
-                const heatmapLabels = [...new Set(heatmapData.map(d => d.category))];
-                const metrics = ['positive', 'neutral', 'negative'];
-                
-                const heatmapValues = heatmapLabels.map(category => {
-                    const row = heatmapData.find(d => d.category === category);
-                    return metrics.map(metric => row[metric]);
-                });
-
-                new Chart(document.getElementById('heatmapChart'), {
-                    type: 'matrix',
-                    data: {
-                        datasets: [{
-                            label: 'Тепловая карта',
-                            data: heatmapValues.flat().map((value, i) => ({
-                                x: i % metrics.length,
-                                y: Math.floor(i / metrics.length),
-                                v: value
-                            })),
-                            width: ({ chart }) => (chart.chartArea || {}).width / metrics.length - 1,
-                            height: ({ chart }) => (chart.chartArea || {}).height / heatmapLabels.length - 1
-                        }]
                     },
                     options: {
-                        scales: {
-                            x: {
-                                type: 'category',
-                                labels: metrics,
-                                offset: true
-                            },
-                            y: {
-                                type: 'category',
-                                labels: heatmapLabels,
-                                offset: true
-                            }
-                        }
+                        responsive: true
                     }
                 });
+
+                if (data.heatmap && data.heatmap.length > 0) {
+                    // Stacked Bar Chart instead of Heatmap
+                    const heatmapData = data.heatmap;
+                    const categories = [...new Set(heatmapData.map(d => d.category))];
+                    
+                    new Chart(document.getElementById('stackedBarChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: categories,
+                            datasets: [
+                                {
+                                    label: 'Положительные',
+                                    data: categories.map(category => heatmapData.find(d => d.category === category).positive),
+                                    backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                                },
+                                {
+                                    label: 'Нейтральные',
+                                    data: categories.map(category => heatmapData.find(d => d.category === category).neutral),
+                                    backgroundColor: 'rgba(255, 206, 86, 0.5)'
+                                },
+                                {
+                                    label: 'Отрицательные',
+                                    data: categories.map(category => heatmapData.find(d => d.category === category).negative),
+                                    backgroundColor: 'rgba(255, 99, 132, 0.5)'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                document.getElementById('error').textContent = 'Ошибка при загрузке данных: ' + error;
+                document.getElementById('error').style.display = 'block';
             });
     </script>
 </body>

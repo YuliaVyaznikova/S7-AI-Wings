@@ -1,39 +1,41 @@
 from flask import Flask, render_template, jsonify
-import ast
-from stats import make_stats
 from collections import Counter
 
 app = Flask(__name__)
 
-def load_data():
-    try:
-        with open("dataset.txt", "r", encoding="utf-8") as file:
-            lines = file.readlines()
-        data = [ast.literal_eval(line.strip()) for line in lines]
-        return data
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        return []
+# Статические данные для демонстрации
+SAMPLE_DATA = [
+    {"category": "Багаж", "tune": "negative", "re": "Потеряли багаж"},
+    {"category": "Сервис", "tune": "positive", "re": "Отличное обслуживание"},
+    {"category": "Питание", "tune": "neutral", "re": "Стандартное питание"},
+    {"category": "Багаж", "tune": "negative", "re": "Долгая выдача багажа"},
+    {"category": "Сервис", "tune": "positive", "re": "Вежливый персонал"},
+    {"category": "Комфорт", "tune": "positive", "re": "Удобные кресла"},
+]
 
-def load_heatmap_data():
-    try:
-        return make_stats()
-    except Exception as e:
-        print(f"Error loading heatmap data: {e}")
-        return []
+SAMPLE_HEATMAP = [
+    {"category": "Багаж", "positive": 0.2, "neutral": 0.3, "negative": 0.5},
+    {"category": "Сервис", "positive": 0.7, "neutral": 0.2, "negative": 0.1},
+    {"category": "Питание", "positive": 0.4, "neutral": 0.4, "negative": 0.2},
+    {"category": "Комфорт", "positive": 0.6, "neutral": 0.3, "negative": 0.1},
+]
 
 @app.route('/api/data')
 def get_data():
-    data = load_data()
-    categories = [item['category'] for item in data]
-    category_counts = Counter(categories)
-    
-    heatmap_data = load_heatmap_data()
-    
-    return jsonify({
-        'categories': dict(category_counts),
-        'heatmap': heatmap_data
-    })
+    try:
+        categories = [item['category'] for item in SAMPLE_DATA]
+        category_counts = Counter(categories)
+        
+        return jsonify({
+            'categories': dict(category_counts),
+            'heatmap': SAMPLE_HEATMAP
+        })
+    except Exception as e:
+        return jsonify({
+            'categories': {},
+            'heatmap': [],
+            'error': str(e)
+        }), 500
 
 @app.route('/')
 def index():
