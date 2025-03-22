@@ -35,21 +35,21 @@
         // Функция для генерации цветов
         function generateColors(count) {
             const baseColors = [
-                'rgb(255, 99, 132)',   // красный
-                'rgb(54, 162, 235)',   // синий
-                'rgb(255, 206, 86)',   // желтый
-                'rgb(75, 192, 192)',   // бирюзовый
-                'rgb(153, 102, 255)',  // фиолетовый
-                'rgb(255, 159, 64)',   // оранжевый
-                'rgb(0, 204, 102)',    // зеленый
-                'rgb(255, 102, 255)',  // розовый
-                'rgb(102, 255, 255)',  // голубой
-                'rgb(255, 204, 0)',    // золотой
-                'rgb(204, 0, 204)',    // пурпурный
-                'rgb(0, 153, 153)',    // морской волны
-                'rgb(204, 102, 0)',    // коричневый
-                'rgb(102, 0, 204)',    // индиго
-                'rgb(204, 204, 0)'     // оливковый
+                'rgb(255, 51, 51)',    // яркий красный
+                'rgb(0, 128, 255)',    // яркий синий
+                'rgb(255, 187, 0)',    // яркий желтый
+                'rgb(0, 204, 102)',    // яркий зеленый
+                'rgb(153, 51, 255)',   // яркий фиолетовый
+                'rgb(255, 102, 0)',    // яркий оранжевый
+                'rgb(51, 204, 204)',   // яркий бирюзовый
+                'rgb(255, 51, 153)',   // яркий розовый
+                'rgb(0, 153, 0)',      // темно-зеленый
+                'rgb(204, 153, 0)',    // темно-золотой
+                'rgb(153, 0, 153)',    // темно-пурпурный
+                'rgb(0, 102, 204)',    // темно-синий
+                'rgb(204, 51, 0)',     // темно-оранжевый
+                'rgb(102, 0, 204)',    // темно-фиолетовый
+                'rgb(153, 153, 0)'     // темно-оливковый
             ];
 
             // Если категорий больше, чем базовых цветов, генерируем дополнительные
@@ -59,9 +59,10 @@
 
             const colors = [...baseColors];
             for (let i = baseColors.length; i < count; i++) {
-                const r = Math.floor(Math.random() * 255);
-                const g = Math.floor(Math.random() * 255);
-                const b = Math.floor(Math.random() * 255);
+                // Генерируем более яркие цвета
+                const r = Math.floor(Math.random() * 156) + 100; // от 100 до 255
+                const g = Math.floor(Math.random() * 156) + 100;
+                const b = Math.floor(Math.random() * 156) + 100;
                 colors.push(`rgb(${r}, ${g}, ${b})`);
             }
             return colors;
@@ -86,6 +87,7 @@
                 }
 
                 const colors = generateColors(categories.length);
+                const total = counts.reduce((a, b) => a + b, 0);
 
                 // Bar Chart
                 new Chart(document.getElementById('barChart'), {
@@ -95,7 +97,7 @@
                         datasets: [{
                             label: 'Количество отзывов',
                             data: counts,
-                            backgroundColor: colors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.5)'))
+                            backgroundColor: colors
                         }]
                     },
                     options: {
@@ -115,7 +117,7 @@
                         labels: categories,
                         datasets: [{
                             data: counts,
-                            backgroundColor: colors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.5)'))
+                            backgroundColor: colors
                         }]
                     },
                     options: {
@@ -125,6 +127,15 @@
                                 position: 'right',
                                 labels: {
                                     boxWidth: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${value} (${percentage}%)`;
+                                    }
                                 }
                             }
                         }
@@ -144,17 +155,17 @@
                                 {
                                     label: 'Положительные',
                                     data: heatmapData.map(d => d.positive),
-                                    backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                                    backgroundColor: 'rgb(75, 192, 192)'
                                 },
                                 {
                                     label: 'Нейтральные',
                                     data: heatmapData.map(d => d.neutral),
-                                    backgroundColor: 'rgba(255, 206, 86, 0.5)'
+                                    backgroundColor: 'rgb(255, 187, 0)'
                                 },
                                 {
                                     label: 'Отрицательные',
                                     data: heatmapData.map(d => d.negative),
-                                    backgroundColor: 'rgba(255, 99, 132, 0.5)'
+                                    backgroundColor: 'rgb(255, 51, 51)'
                                 }
                             ]
                         },
@@ -171,6 +182,17 @@
                                     ticks: {
                                         callback: function(value) {
                                             return (value * 100) + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.raw;
+                                            const percentage = (value * 100).toFixed(1);
+                                            return `${context.dataset.label}: ${percentage}%`;
                                         }
                                     }
                                 }
