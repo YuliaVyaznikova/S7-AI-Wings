@@ -4,10 +4,33 @@
     <title>S7 AI Wings - Анализ отзывов</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .main-title {
+            text-align: center;
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(to right, #e0e0e0, #ffffff, #e0e0e0);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         .chart-container {
             width: 800px;
             margin: 20px auto;
             text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-container h2 {
+            color: #444;
+            margin-bottom: 20px;
         }
         .error-message {
             color: red;
@@ -17,6 +40,7 @@
     </style>
 </head>
 <body>
+    <h1 class="main-title">Статистика отзывов S7</h1>
     <div id="error" class="error-message" style="display: none;"></div>
     <div class="chart-container">
         <h2>Распределение отзывов по категориям</h2>
@@ -52,15 +76,13 @@
                 'rgb(153, 153, 0)'     // темно-оливковый
             ];
 
-            // Если категорий больше, чем базовых цветов, генерируем дополнительные
             if (count <= baseColors.length) {
                 return baseColors.slice(0, count);
             }
 
             const colors = [...baseColors];
             for (let i = baseColors.length; i < count; i++) {
-                // Генерируем более яркие цвета
-                const r = Math.floor(Math.random() * 156) + 100; // от 100 до 255
+                const r = Math.floor(Math.random() * 156) + 100;
                 const g = Math.floor(Math.random() * 156) + 100;
                 const b = Math.floor(Math.random() * 156) + 100;
                 colors.push(`rgb(${r}, ${g}, ${b})`);
@@ -137,9 +159,57 @@
                                         return `${context.label}: ${value} (${percentage}%)`;
                                     }
                                 }
+                            },
+                            datalabels: {
+                                formatter: (value, ctx) => {
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return percentage + '%';
+                                },
+                                color: '#fff',
+                                font: {
+                                    weight: 'bold',
+                                    size: 14
+                                }
                             }
                         }
-                    }
+                    },
+                    plugins: [{
+                        afterDraw: function(chart) {
+                            const ctx = chart.ctx;
+                            ctx.save();
+                            const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+                            const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+                            
+                            chart.data.datasets.forEach((dataset, i) => {
+                                const meta = chart.getDatasetMeta(i);
+                                meta.data.forEach((element, index) => {
+                                    const data = dataset.data[index];
+                                    const percentage = ((data / total) * 100).toFixed(1) + '%';
+                                    
+                                    // Get the center point and angle of the segment
+                                    const model = element;
+                                    const angle = Math.PI / 2 - (element.startAngle + (element.endAngle - element.startAngle) / 2);
+                                    const radius = (model.innerRadius + (model.outerRadius - model.innerRadius) / 2);
+                                    
+                                    const x = centerX + radius * Math.cos(angle);
+                                    const y = centerY - radius * Math.sin(angle);
+                                    
+                                    // Draw the text
+                                    ctx.font = '14px Arial';
+                                    ctx.fillStyle = 'white';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'middle';
+                                    
+                                    // Add stroke to make text more readable
+                                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                                    ctx.lineWidth = 3;
+                                    ctx.strokeText(percentage, x, y);
+                                    ctx.fillText(percentage, x, y);
+                                });
+                            });
+                            ctx.restore();
+                        }
+                    }]
                 });
 
                 if (data.heatmap && data.heatmap.length > 0) {
