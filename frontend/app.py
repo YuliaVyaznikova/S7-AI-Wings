@@ -1,34 +1,78 @@
 from flask import Flask, render_template, jsonify
+import ast
 from collections import Counter
+import os
 
 app = Flask(__name__)
 
-# Статические данные для демонстрации
-SAMPLE_DATA = [
-    {"category": "Багаж", "tune": "negative", "re": "Потеряли багаж"},
-    {"category": "Сервис", "tune": "positive", "re": "Отличное обслуживание"},
-    {"category": "Питание", "tune": "neutral", "re": "Стандартное питание"},
-    {"category": "Багаж", "tune": "negative", "re": "Долгая выдача багажа"},
-    {"category": "Сервис", "tune": "positive", "re": "Вежливый персонал"},
-    {"category": "Комфорт", "tune": "positive", "re": "Удобные кресла"},
-]
+def get_data_path():
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    project_dir = os.path.dirname(base_dir)
+    return os.path.join(project_dir, "dataset.txt")
 
-SAMPLE_HEATMAP = [
-    {"category": "Багаж", "positive": 0.2, "neutral": 0.3, "negative": 0.5},
-    {"category": "Сервис", "positive": 0.7, "neutral": 0.2, "negative": 0.1},
-    {"category": "Питание", "positive": 0.4, "neutral": 0.4, "negative": 0.2},
-    {"category": "Комфорт", "positive": 0.6, "neutral": 0.3, "negative": 0.1},
-]
+def load_data():
+    try:
+        with open(get_data_path(), "r", encoding="utf-8") as file:
+            lines = file.readlines()
+        data = []
+        for line in lines:
+            try:
+                # Каждая строка в формате (tune, category, text)
+                tune, category, text = ast.literal_eval(line.strip())
+                data.append({"tune": tune, "category": category, "text": text})
+            except:
+                continue
+        return data
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return []
+
+def calculate_heatmap(data):
+    # Подсчитываем статистику по каждой категории
+    stats = {}
+    for item in data:
+        category = item['category']
+        tune = item['tune']
+        
+        if category not in stats:
+            stats[category] = {'positive': 0, 'neutral': 0, 'negative': 0, 'total': 0}
+        
+        stats[category][tune] += 1
+        stats[category]['total'] += 1
+    
+    # Преобразуем в проценты
+    result = []
+    for category, counts in stats.items():
+        total = counts['total']
+        if total > 0:
+            result.append({
+                'category': category,
+                'positive': counts['positive'] / total,
+                'neutral': counts['neutral'] / total,
+                'negative': counts['negative'] / total
+            })
+    
+    return result
 
 @app.route('/api/data')
 def get_data():
     try:
-        categories = [item['category'] for item in SAMPLE_DATA]
+        data = load_data()
+        if not data:
+            return jsonify({
+                'categories': {},
+                'heatmap': [],
+                'error': 'No data available'
+            })
+
+        categories = [item['category'] for item in data]
         category_counts = Counter(categories)
+        
+        heatmap_data = calculate_heatmap(data)
         
         return jsonify({
             'categories': dict(category_counts),
-            'heatmap': SAMPLE_HEATMAP
+            'heatmap': heatmap_data
         })
     except Exception as e:
         return jsonify({
